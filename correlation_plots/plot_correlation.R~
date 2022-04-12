@@ -1,0 +1,146 @@
+
+metadata <- read.table("wgs_meta_delivery.tsv", header=TRUE)
+
+files <- read.table("species_abundances_files.txt", sep='\n')[, 1]
+
+first <- read.table(files[1], sep='\t')
+
+n.obs <- length(files)
+n.clusters <- nrow(first)
+
+abundances <- matrix(0, nrow = n.obs, ncol = n.clusters)
+rownames(abundances) <- gsub("_abundances.txt", "", gsub(".*/", "", files))
+colnames(abundances) <- first[, 1]
+
+## Full cohort
+for (i in 1:n.obs) {
+    n.reads <- as.numeric(read.table(files[i], comment.char='@')[2, 2])
+    abundances[i, ] <- round(n.reads*read.table(files[i], sep='\t')[, 2], digits = 0)
+}
+otu_table <- t(abundances)
+otu_table <- cbind("OTU_ID" = rownames(otu_table), otu_table)
+otu_table <- rbind(colnames(otu_table), otu_table)
+write.table(otu_table, file = "otu_table_full.tsv", sep='\t', col.names=FALSE, row.names=FALSE, quote=FALSE)
+
+## Remove Mother/Infancy samples
+abundances <- abundances[match(metadata$err_accession, rownames(abundances)), ]
+
+full <- abundances[!grepl("Mother|Infancy", metadata$Time_point), ]
+vaginal <- abundances[!grepl("Mother|Infancy", metadata$Time_point) & metadata$Delivery_mode == "Vaginal", ]
+caesarean <- abundances[!grepl("Mother|Infancy", metadata$Time_point) & metadata$Delivery_mode == "Caesarean", ]
+
+## Write full cohort, no Mother/Infancy
+otu_table <- t(full)
+otu_table <- otu_table[rowSums(otu_table) > 0, ]
+otu_table <- cbind("OTU_ID" = rownames(otu_table), otu_table)
+otu_table <- rbind(colnames(otu_table), otu_table)
+write.table(otu_table, file = "correlation_plots/otu_table_full.tsv", sep='\t', col.names=FALSE, row.names=FALSE, quote=FALSE)
+
+## Write vaginal cohort, no Mother/Infancy
+otu_table <- t(vaginal)
+otu_table <- otu_table[rowSums(otu_table) > 0, ]
+otu_table <- cbind("OTU_ID" = rownames(otu_table), otu_table)
+otu_table <- rbind(colnames(otu_table), otu_table)
+write.table(otu_table, file = "correlation_plots/otu_table_vaginal.tsv", sep='\t', col.names=FALSE, row.names=FALSE, quote=FALSE)
+
+## Write caesarean cohort, no Mother/Infancy
+otu_table <- t(caesarean)
+otu_table <- otu_table[rowSums(otu_table) > 0, ]
+otu_table <- cbind("OTU_ID" = rownames(otu_table), otu_table)
+otu_table <- rbind(colnames(otu_table), otu_table)
+write.table(otu_table, file = "correlation_plots/otu_table_caesarean.tsv", sep='\t', col.names=FALSE, row.names=FALSE, quote=FALSE)
+
+
+
+demix.results <- read.table("wgs_demix_check_high_confidence.tsv", sep='\t', header=TRUE)
+something.passes <- by(demix.results$cluster, demix.results$accession, function(x) unique(gsub("_NA|_SC[0-9]*_ST[0-9]*|_Pop[0-9]*|_SC[0-9]*", "", c(x))))
+demix.results.ecoli <- read.table("ecoli-new-reference/E_col_demix_results_top2.tsv", sep='\t', header=FALSE)
+something.passes2 <- by(demix.results.ecoli$V2, demix.results.ecoli$V1, function(x) unique(gsub("_NA|_SC[0-9]*_ST[0-9]*|_Pop[0-9]*", "", c(x))))
+l <- list(something.passes, something.passes2)
+keys <- unique(unlist(lapply(l, names)))
+tst <- do.call(mapply, c(FUN=c, lapply(l, `[`, keys)))
+demix.filter <- lapply(tst, function(x) x[!is.na(x)])
+
+library("corrplot")
+
+vaginal.correlations <- read.table("correlation_plots/vaginal_correlation.tsv", sep='\t')[, -1]
+vaginal.pvalues <- read.table("correlation_plots/vaginal_pvalues.tsv", sep='\t')[, -1]
+vaginal.correlations[vaginal.pvalues >= 0.05] <- 0
+rownames(vaginal.correlations) <- read.table("correlation_plots/vaginal_correlation.tsv", sep='\t')[, 1] -> colnames(vaginal.correlations)
+priority.pathogens.v <- grepl("[EKS][_][a-z][a-z][a-z]", rownames(vaginal.correlations)) & rownames(vaginal.correlations) != "S_pne"
+
+caesarean.correlations <- read.table("correlation_plots/caesarean_correlation.tsv", sep='\t')[, -1]
+caesarean.pvalues <- read.table("correlation_plots/caesarean_pvalues.tsv", sep='\t')[, -1]
+caesarean.correlations[caesarean.pvalues >= 0.05] <- 0
+rownames(caesarean.correlations) <- read.table("correlation_plots/caesarean_correlation.tsv", sep='\t')[, 1] -> colnames(caesarean.correlations)
+priority.pathogens.c <- grepl("[A-Z][_][a-z][a-z][a-z]", rownames(caesarean.correlations))
+
+cor.max <- max(abs(range(setdiff(unlist(c(vaginal.correlations[priority.pathogens.v, priority.pathogens.v], caesarean.correlations[priority.pathogens.c, priority.pathogens.c])), 1.0000))))
+
+diag(vaginal.correlations) <- 0
+diag(caesarean.correlations) <- 0
+
+cor.max <- 0.20
+
+indices <- lapply(demix.filter[names(demix.filter) %in% rownames(vaginal)], function(x) t(combn(x, min(length(x), 2))))
+
+counts <- vaginal.correlations[priority.pathogens.v, priority.pathogens.v]
+counts[counts != 0] <- 0
+for (i in 1:length(indices)) {
+    if (length(indices[[i]]) > 1) {
+        for (j in 1:nrow(indices[[i]]))
+            counts[indices[[i]][j, 1], indices[[i]][j, 2]] <- counts[indices[[i]][j, 1], indices[[i]][j, 2]] + 1
+            counts[indices[[i]][j, 2], indices[[i]][j, 1]] <- counts[indices[[i]][j, 2], indices[[i]][j, 1]] + 1
+        }
+    }
+}
+
+library("RColorBrewer")
+
+gradient <- colorRampPalette(rev(c("#ca0020", "#f4a582", "white", "#92c5de", "#0571b0")))
+
+pdf(file = "correlation_plot_example.pdf", width = 8, height = 8)
+par(mar = c(2, 4, 4, 2))
+layout(matrix(1:2, ncol = 2), width = c(2, 0.4), height = c(1, 1))
+dat <- vaginal.correlations[priority.pathogens.v, priority.pathogens.v]
+plot(0, type = 'n', xlim = c(0, length(rownames(dat))), ylim = c(0, length(rownames(dat))), xaxt = 'n', yaxt = 'n', xlab = '', ylab = '', bty = 'n')
+axis(side = 3, at = 1:length(rownames(dat)), labels = gsub("_", ". ", rownames(dat)), las = 2, font = 3)
+axis(side = 2, at = 1:length(rownames(dat)), labels = gsub("_", ". ", rev(rownames(dat))), las = 2, font = 3)
+abline(v = 1:length(rownames(dat)), col = "gray90")
+abline(h = 1:length(rownames(dat)), col = "gray90")
+for (i in 1:length(rownames(dat))) {
+    for (j in 1:length(rownames(dat))) {
+        if (dat[i, j] != 0) {
+            ## size <- 4*abs(dat[i, j])/cor.max
+            size <- log(counts[i, j] + 1, base = 6) + 1 ## log(c(1, 5, 10, 20, 100), base = 6) + 1
+            lines(x = i, y = length(rownames(dat)) - j + 1, type = 'p', cex = size, col = gradient(41)[round(dat[i, j], digits = 2)*100 + 21], pch = 19)
+        }
+    }
+}
+title(main = "a)", line = -1, adj = 0.02, outer = TRUE)
+legend("bottom", legend = c("0-1", 5, 10, 20, 100), fill = "white", pch = 19, border = "white", bty = 'n', ncol = 5, pt.cex = log(c(1, 5, 10, 20, 100), base = 6) + 1)
+title(main = "# of times a lineage was reliably identified", line = -35, font.main = 1, cex.main = 0.90)
+par(mar = c(4, 0, 4, 0.5))
+legend_image <- as.raster(matrix(rev(gradient(41)), ncol=1))
+plot(c(0,2),c(0,1),type = 'n', axes = F,xlab = '', ylab = '')
+title(main = "Estimated\ncorrelation", font.main = 1, cex.main = 0.90, line = -33.5, adj = 0.1)
+text(x=1.5, y = seq(0,1,l=5), labels = seq(-0.20,0.20,l=5), adj = 0)
+rasterImage(legend_image, 0, 0, 1,1)
+dev.off()
+
+str(vaginal.correlations[priority.pathogens.v, priority.pathogens.v])
+
+
+
+##pdf(file = "vaginal_delivery_all_correlations.pdf", width = 5, height = 5)
+corrplot(as.matrix(vaginal.correlations[priority.pathogens.v, priority.pathogens.v]), diag = FALSE, col.lim = c(-cor.max, cor.max), is.corr = FALSE)
+title(main = "Vaginal delivery cohort", line = 3)
+##dev.off()
+
+pdf(file = "caesarean_delivery_all_correlations.pdf", width = 5, height = 5)
+corrplot(as.matrix(caesarean.correlations[priority.pathogens.c, priority.pathogens.c]), diag = FALSE, col.lim = c(-cor.max, cor.max), is.corr = TRUE)
+title(main = "Caesarean delivery cohort", line = 3)
+dev.off()
+
+
+corrplot(as.matrix(caesarean.correlations[priority.pathogens.c, priority.pathogens.c]), col.lim = c(-cor.max, cor.max), is.corr = FALSE, title = "Caesarean delivery cohort")
