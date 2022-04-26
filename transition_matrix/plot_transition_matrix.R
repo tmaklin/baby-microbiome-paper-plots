@@ -9,7 +9,9 @@ caesarean.accessions <- metadata$err_accession[!grepl("Mother|Infancy", metadata
 
 ## Read in the results from demix_check
 demix.results <- read.table("../ecoli-new-reference/E_col_demix_results_top2.tsv", sep='\t', header=FALSE, stringsAsFactors=FALSE)
-##demix.results <- demix.results[demix.results[, 3] > 0.01, ]
+
+## Only use samples that have a relative abundance highe than 1%
+demix.results <- demix.results[demix.results[, 3] > 0.01, ]
 
 ## Extract cohorts
 vaginal <- demix.results[demix.results$V1 %in% vaginal.accessions, ]
