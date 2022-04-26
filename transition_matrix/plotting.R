@@ -14,7 +14,7 @@ PlotTransitionMatrix <- function(transition.matrix) {
     ## which errors the axis plotting after the matrix has been
     ## plotted, since plot.matrix doesn't allow passing the usual
     ## xaxt='n' and yaxt='n' for some reason.
-    err <- tryCatch(plot(no.emptys, breaks = seq(0, length(mat.colors), by=1), col = mat.colors, main="", xlab="", ylab="", las = 4), error = function(e) {}
+    err <- tryCatch(plot(no.emptys, breaks = seq(0, length(mat.colors), by=1), col = mat.colors, main="", xlab="", ylab="", las = 4), error = function(e) {})
 
     ## Plot the axes with labels adjusted to horizontal at the left
     ## side for y-axis and vertical at the top for x-axis
