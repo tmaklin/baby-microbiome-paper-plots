@@ -13,7 +13,7 @@ PlotTransitionMatrix <- function(transition.matrix, title.main, title.adj, title
 
     ## top axis, labels at 45 degree angle
     axis(side = 3, at = 1:n.states, labels = rep("", n.states))##, labels = state.names, las = 2)
-    text(x = 1:n.states, y = y.lab.pos, labels = state.names, srt = 65, pos = 4, xpd = TRUE, adj = 0)
+    text(x = 1:n.states -0.2, y = y.lab.pos, labels = state.names, srt = 65, pos = 4, xpd = TRUE, adj = 0)
     abline(v = 1:n.states, col = "gray90")
 
     ## left axis, labels in reverse order to match top axis
