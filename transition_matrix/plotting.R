@@ -45,6 +45,6 @@ IntensityLegend <- function(ColorFunc, n.max) {
     plot(c(0,2),c(0,10),type = 'n', axes = F,xlab = '', ylab = '')
 ##    title(main = "Transitions", font.main = 1, cex.main = 2,
 ##          line = -25.5, adj = 0.01)
-    legend("topleft", legend = seq(1, n.max, l = n.max), col = ColorFunc(n.max), bty = 'n', pch = 19, cex = 1.4)
+    legend("left", legend = seq(1, n.max, l = n.max), col = ColorFunc(n.max), bty = 'n', pch = 19, cex = 3.5)
     par(xpd = FALSE)
 }
