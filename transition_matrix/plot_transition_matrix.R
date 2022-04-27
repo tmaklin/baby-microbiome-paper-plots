@@ -1,56 +1,52 @@
 
 source("data_wrangling.R") ## Functions to build the transition matrix
 source("plotting.R") ## Functions to plot the transition matrix
+source("fix_cluster_labels.R") ## Functions to change the cluster labels to aesthetically pleasing format
 
-## Read in the sample metadata and filter accessions to exclude Mother/Infancy samples
-metadata <- read.table("../wgs_meta_delivery.tsv", header=TRUE)
-##vaginal.accessions <- metadata$err_accession[!grepl("Mother|Infancy", metadata$Time_point) & metadata$Delivery_mode == "Vaginal"]
-##caesarean.accessions <- metadata$err_accession[!grepl("Mother|Infancy", metadata$Time_point) & metadata$Delivery_mode == "Caesarean"]
-##vaginal.accessions <- metadata$err_accession[!grepl("Mother", metadata$Time_point) & metadata$Delivery_mode == "Vaginal"]
-##caesarean.accessions <- metadata$err_accession[!grepl("Mother", metadata$Time_point) & metadata$Delivery_mode == "Caesarean"]
-##vaginal.accessions <- metadata$err_accession[!grepl("Infancy", metadata$Time_point) & metadata$Delivery_mode == "Vaginal"]
-##caesarean.accessions <- metadata$err_accession[!grepl("Infancy", metadata$Time_point) & metadata$Delivery_mode == "Caesarean"]
-vaginal.accessions <- metadata$err_accession[metadata$Delivery_mode == "Vaginal"]
-caesarean.accessions <- metadata$err_accession[!metadata$Delivery_mode == "Caesarean"]
+vaginal.mats <- list("no_mother_no_infancy" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
+                                                                   "../ecoli-new-reference/E_col_demix_results_top2.tsv",
+                                                                   "../ecoli-new-reference/new_clusters.tsv",
+                                                                   "Vaginal", "Mother|Infancy", "E_col"),
+                     "no_mother" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
+                                                        "../ecoli-new-reference/E_col_demix_results_top2.tsv",
+                                                        "../ecoli-new-reference/new_clusters.tsv",
+                                                        "Vaginal", "Mother", "E_col"))
+caesarean.mats <- list("no_mother_no_infancy" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
+                                                                     "../ecoli-new-reference/E_col_demix_results_top2.tsv",
+                                                                     "../ecoli-new-reference/new_clusters.tsv",
+                                                                     "Caesarean", "Mother|Infancy", "E_col"),
+                       "no_mother" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
+                                                          "../ecoli-new-reference/E_col_demix_results_top2.tsv",
+                                                          "../ecoli-new-reference/new_clusters.tsv",
+                                                          "Caesarean", "Mother", "E_col"))
 
-## Read in the results from demix_check
-demix.results <- read.table("../ecoli-new-reference/E_col_demix_results_top2.tsv", sep='\t', header=FALSE, stringsAsFactors=FALSE)
+## Change the cluster labels to what we want in the plot
+vaginal.mats <- lapply(vaginal.mats, function(x) { rownames(x) <- colnames(x) <- PrettyClusterLabels(rownames(x), EcolPrettyLabels); return(x) })
+caesarean.mats <- lapply(caesarean.mats, function(x) { rownames(x) <- colnames(x) <- PrettyClusterLabels(rownames(x), EcolPrettyLabels); return(x) })
 
-## Only use samples that have a relative abundance highe than 1%
-demix.results <- demix.results[demix.results[, 3] > 0.01, ]
+## Reorder the matrices so they ascend in ST code
+vaginal.mats <- lapply(vaginal.mats, function(x) { new.order <- order(as.numeric(gsub("[- ].*$", "", gsub("ST", "", rownames(x))))); return(x[new.order, new.order]) })
+caesarean.mats <- lapply(caesarean.mats, function(x) { new.order <- order(as.numeric(gsub("[- ].*$", "", gsub("ST", "", rownames(x))))); return(x[new.order, new.order]) })
 
-
-## Extract cohorts
-vaginal <- demix.results[demix.results$V1 %in% vaginal.accessions, ]
-caesarean <- demix.results[demix.results$V1 %in% caesarean.accessions, ]
-
-## Rename the clusters from E_col_Pop[0-999] to E_col_ST[0-9999]_SC[0-999]
-new.clusters <- read.table(file = "../ecoli-new-reference/new_clusters.tsv", sep='\t', header = TRUE)
-vaginal$V2 <- paste("E_col_", new.clusters$Cluster[match(vaginal$V2, new.clusters$PopPUNK)], sep='')
-caesarean$V2 <- paste("E_col_", new.clusters$Cluster[match(caesarean$V2, new.clusters$PopPUNK)], sep='')
-
-## Build the transition matrix for each cohort
-vaginal.mat <- GetTransitionMatrix(vaginal, metadata, "E_col")
-caesarean.mat <- GetTransitionMatrix(caesarean, metadata, "E_col")
-
+## Single hue color for intensity
 gradient <- colorRampPalette(c("#feebe2", "#fbb4b9", "#f768a1", "#c51b8a", "#7a0177"))
 
-pdf(file = "E_coli_transition_matrix_no_mother.pdf", width = 12, height = 6)
-n.max <- max(max(vaginal.mat), max(caesarean.mat))
-par(mar = c(1, 24, 20, 4))
-layout(matrix(1:3, ncol = 3), widths = c(2, 1, 0.3), heights = c(1))
-more.than.once <- which(rowSums(vaginal.mat) > 1 | colSums(vaginal.mat) > 1)
-PlotTransitionMatrix(vaginal.mat[more.than.once, more.than.once], "a)", 0.15, -8, 23.3, n.max, gradient)
-par(mar = c(1, 8, 20, 4))
-more.than.once <- which(rowSums(caesarean.mat) > 1 | colSums(caesarean.mat) > 1)
-PlotTransitionMatrix(caesarean.mat[more.than.once, more.than.once], "b)", 0.60, -8, 9.9, n.max, gradient)
-par(mar = c(1, 0, 20, 4))
+## Get the maximum number of transitions across all samples
+n.max <- max(unlist(lapply(vaginal.mats, max)), unlist(lapply(caesarean.mats, max)))
+
+pdf(file = "E_coli_transition_matrix_no_mother.pdf", width = 9, height = 8)
+layout(matrix(c(1, 2, 5, 3, 4, 5), ncol = 3, byrow = TRUE), widths = c(2, 1.5, 0.3), heights = c(0.65, 0.9))
+par(mar = c(0, 8, 8, 0.5))
+PlotTransitionMatrix(vaginal.mats$no_mother_no_infancy, "a)", 0.07, -5, 18, n.max, 0.3, gradient)
+par(mar = c(7.5, 6, 8, 1))
+PlotTransitionMatrix(caesarean.mats$no_mother_no_infancy, "b)", 0.565, -5, 10.6, n.max, 0.25, gradient)
+par(mar = c(0, 8, 8, 0.5))
+PlotTransitionMatrix(vaginal.mats$no_mother, "c)", 0.07, -30.75, 30, n.max, 0.5, gradient)
+par(mar = c(11, 6, 8, 1))
+PlotTransitionMatrix(caesarean.mats$no_mother, "d)", 0.565, -30.75, 16.4, n.max, 0.4, gradient)
+par(mar = c(1, 0, 8, 4))
 IntensityLegend(gradient, n.max)
 dev.off()
-
-
-##pdf(file = "E_coli_transition_matrix_caesarean_cohort.pdf", width = 18, height = 18)
-##dev.off()
 
 ###
 

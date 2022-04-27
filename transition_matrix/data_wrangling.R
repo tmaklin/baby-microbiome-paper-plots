@@ -1,3 +1,4 @@
+
 ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract = "E_col") {
     ## Reads in the abundance matrix with rows corresponding to
     ## samples from each individual at each time point and cols to the
@@ -136,4 +137,31 @@ GetTransitionMatrix <- function(cohort, full.metadata, species.name) {
     ## Build and return the transition matrix
     transition.mat <- BuildTransitionMatrix(transitions.within.individual, states)
     transition.mat
+}
+
+
+ReadTransitionMatrix <- function(metadata.path, demix.path, new.cluster.names.path, cohort.name, exclude.time.points, species.name) {
+    metadata <- read.table(metadata.path, header=TRUE)
+
+    ## Read in the results from demix_check
+    demix.results <- read.table(demix.path, sep='\t', header=FALSE, stringsAsFactors=FALSE)
+    ## Filter by species
+    demix.results <- demix.results[grepl(species.name, demix.results$V2), ]
+    ## Only use samples that have a relative abundance higher than 1%
+    demix.results <- demix.results[demix.results$V3 > 0.01, ]
+
+    ## Extract cohort and remove excluded time points
+    accessions <- metadata$err_accession[!grepl(exclude.time.points, metadata$Time_point) & metadata$Delivery_mode == cohort.name]
+    samples <- demix.results[demix.results$V1 %in% accessions, ]
+
+    ## ## Rename the clusters from [Species]_Pop[0-999] to [Species]_ST[0-9999]_SC[0-999]
+    new.clusters <- read.table(file = new.cluster.names.path, sep='\t', header = TRUE)
+    samples$V2 <- paste(species.name, "_", new.clusters$Cluster[match(samples$V2, new.clusters$PopPUNK)], sep = '')
+
+    ## ## Build the transition matrix
+    mat <- GetTransitionMatrix(samples, metadata, paste(species.name, "_", sep = ''))
+
+    ## Only return lineages which had more than 2 transitions in either the column _or_ the row
+    more.than.once <- which(rowSums(mat) > 1 | colSums(mat) > 1)
+    mat[more.than.once, more.than.once]
 }

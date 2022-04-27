@@ -3,7 +3,7 @@ library("plot.matrix")
 library("psych")
 library("dichromat")
 
-PlotTransitionMatrix <- function(transition.matrix, title.main, title.adj, title.line, y.lab.pos, n.max, ColorFunc) {##correlations, obs.counts, otu.names, title.main, title.adj, ColorFunc) {
+PlotTransitionMatrix <- function(transition.matrix, title.main, title.adj, title.line, y.lab.pos, n.max, negadj, ColorFunc) {##correlations, obs.counts, otu.names, title.main, title.adj, ColorFunc) {
     n.states <- nrow(transition.matrix)
     state.names <- colnames(transition.matrix)
     state.names <- gsub("_", " ", state.names)
@@ -13,7 +13,7 @@ PlotTransitionMatrix <- function(transition.matrix, title.main, title.adj, title
 
     ## top axis, labels at 45 degree angle
     axis(side = 3, at = 1:n.states, labels = rep("", n.states))##, labels = state.names, las = 2)
-    text(x = 1:n.states -0.2, y = y.lab.pos, labels = state.names, srt = 65, pos = 4, xpd = TRUE, adj = 0)
+    text(x = 1:n.states - negadj, y = y.lab.pos, labels = state.names, srt = 65, pos = 4, xpd = TRUE, adj = 0)
     abline(v = 1:n.states, col = "gray90")
 
     ## left axis, labels in reverse order to match top axis
@@ -43,8 +43,8 @@ PlotTransitionMatrix <- function(transition.matrix, title.main, title.adj, title
 IntensityLegend <- function(ColorFunc, n.max) {
     par(xpd = TRUE)
     plot(c(0,2),c(0,10),type = 'n', axes = F,xlab = '', ylab = '')
-##    title(main = "Transitions", font.main = 1, cex.main = 2,
-##          line = -25.5, adj = 0.01)
-    legend("left", legend = seq(1, n.max, l = n.max), col = ColorFunc(n.max), bty = 'n', pch = 19, cex = 3.5)
+    title(main = "Transitions", font.main = 1, cex.main = 1.31,
+          line = -37.5, adj = 0)
+    legend("left", legend = seq(1, n.max, l = n.max), col = ColorFunc(n.max), bty = 'n', pch = 19, cex = 1.7)
     par(xpd = FALSE)
 }
