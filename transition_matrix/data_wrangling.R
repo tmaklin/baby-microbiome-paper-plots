@@ -9,9 +9,27 @@ ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract = "E_col")
     ## Find cohort-specific samples in the metadata
     order.in.metadata <- match(cohort$V1, full.metadata$err_accession)
 
+    ## Rename time points so they sort correctly with sort()
+    new.time.points <- full.metadata[order.in.metadata, ]$Time_point
+    new.time.points <- gsub("Mother", "10", new.time.points)
+    new.time.points <- gsub("^21$", "23", new.time.points)
+    new.time.points <- gsub("^18$", "22", new.time.points)
+    new.time.points <- gsub("^17$", "21", new.time.points)
+    new.time.points <- gsub("^14$", "20", new.time.points)
+    new.time.points <- gsub("^13$", "19", new.time.points)
+    new.time.points <- gsub("^12$", "18", new.time.points)
+    new.time.points <- gsub("^11$", "17", new.time.points)
+    new.time.points <- gsub("^10$", "16", new.time.points)
+    new.time.points <- gsub("^9$", "15", new.time.points)
+    new.time.points <- gsub("^8$", "14", new.time.points)
+    new.time.points <- gsub("^7$", "13", new.time.points)
+    new.time.points <- gsub("^6$", "12", new.time.points)
+    new.time.points <- gsub("^4$", "11", new.time.points)
+    new.time.points <- gsub("Infancy", "30", new.time.points)
+
     ## Extract the column and row names
     cols <- unique(cohort$V2) ## V2 is the identified lineage's name
-    rows <- cbind("Individual" = full.metadata[order.in.metadata, ]$Individual, "Time_point" = full.metadata[order.in.metadata, ]$Time_point)
+    rows <- cbind("Individual" = full.metadata[order.in.metadata, ]$Individual, "Time_point" = new.time.points)
     row.order <- order(rows[, 1]) ## rows[, 1] contains individual names
     vals.ordered <- cbind(cohort[row.order, ], rows[row.order, 1], rows[row.order, 2]) ## rows[, 2] contains the sampling timepoint (in days since birth)
 
