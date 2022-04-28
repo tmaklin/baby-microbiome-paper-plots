@@ -4,20 +4,21 @@ source("plotting.R") ## Functions to plot the transition matrix
 source("fix_cluster_labels.R") ## Functions to change the cluster labels to aesthetically pleasing format
 
 vaginal.mats <- list("no_mother_no_infancy" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
-                                                                   "../ecoli-new-reference/E_col_demix_results_top2.tsv",
-                                                                   "../ecoli-new-reference/new_clusters.tsv",
+                                                                   "../wgs_demix_check_high_confidence.tsv",
+                                                                   "../poppunk_cluster_info/E_col_new_clusters.tsv",
                                                                    "Vaginal", "Mother|Infancy", "E_col"),
                      "no_mother" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
-                                                        "../ecoli-new-reference/E_col_demix_results_top2.tsv",
-                                                        "../ecoli-new-reference/new_clusters.tsv",
+                                                        "../wgs_demix_check_high_confidence.tsv",
+                                                        "../poppunk_cluster_info/E_col_new_clusters.tsv",
                                                         "Vaginal", "Mother", "E_col"))
+
 caesarean.mats <- list("no_mother_no_infancy" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
-                                                                     "../ecoli-new-reference/E_col_demix_results_top2.tsv",
-                                                                     "../ecoli-new-reference/new_clusters.tsv",
+                                                                     "../wgs_demix_check_high_confidence.tsv",
+                                                                     "../poppunk_cluster_info/E_col_new_clusters.tsv",
                                                                      "Caesarean", "Mother|Infancy", "E_col"),
                        "no_mother" = ReadTransitionMatrix("../wgs_meta_delivery.tsv",
-                                                          "../ecoli-new-reference/E_col_demix_results_top2.tsv",
-                                                          "../ecoli-new-reference/new_clusters.tsv",
+                                                          "../wgs_demix_check_high_confidence.tsv",
+                                                          "../poppunk_cluster_info/E_col_new_clusters.tsv",
                                                           "Caesarean", "Mother", "E_col"))
 
 ## Change the cluster labels to what we want in the plot
@@ -34,7 +35,7 @@ gradient <- colorRampPalette(c("#feebe2", "#fbb4b9", "#f768a1", "#c51b8a", "#7a0
 ## Get the maximum number of transitions across all samples
 n.max <- max(unlist(lapply(vaginal.mats, max)), unlist(lapply(caesarean.mats, max)))
 
-pdf(file = "E_coli_transition_matrix_no_mother.pdf", width = 9, height = 8)
+pdf(file = "E_coli_transition_matrix.pdf", width = 9, height = 8)
 layout(matrix(c(1, 2, 5, 3, 4, 5), ncol = 3, byrow = TRUE), widths = c(2, 1.5, 0.3), heights = c(0.65, 0.9))
 par(mar = c(0, 8, 8, 0.5))
 PlotTransitionMatrix(vaginal.mats$no_mother_no_infancy, "a)", 0.07, -5, 18, n.max, 0.3, gradient)

@@ -8,7 +8,7 @@ ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract = "E_col")
     ## that did not pass demix_check to zero.
 
     ## Find cohort-specific samples in the metadata
-    order.in.metadata <- match(cohort$V1, full.metadata$err_accession)
+    order.in.metadata <- match(cohort$accession, full.metadata$err_accession)
 
     ## Rename time points so they sort correctly with sort()
     new.time.points <- full.metadata[order.in.metadata, ]$Time_point
@@ -29,7 +29,7 @@ ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract = "E_col")
     new.time.points <- gsub("Infancy", "30", new.time.points)
 
     ## Extract the column and row names
-    cols <- unique(cohort$V2) ## V2 is the identified lineage's name
+    cols <- unique(cohort$cluster)
     rows <- cbind("Individual" = full.metadata[order.in.metadata, ]$Individual, "Time_point" = new.time.points)
     row.order <- order(rows[, 1]) ## rows[, 1] contains individual names
     vals.ordered <- cbind(cohort[row.order, ], rows[row.order, 1], rows[row.order, 2]) ## rows[, 2] contains the sampling timepoint (in days since birth)
@@ -144,19 +144,20 @@ ReadTransitionMatrix <- function(metadata.path, demix.path, new.cluster.names.pa
     metadata <- read.table(metadata.path, header=TRUE)
 
     ## Read in the results from demix_check
-    demix.results <- read.table(demix.path, sep='\t', header=FALSE, stringsAsFactors=FALSE)
+    demix.results <- read.table(demix.path, sep='\t', header=TRUE, stringsAsFactors=FALSE)
     ## Filter by species
-    demix.results <- demix.results[grepl(species.name, demix.results$V2), ]
+    demix.results <- demix.results[grepl(species.name, demix.results$cluster), ]
     ## Only use samples that have a relative abundance higher than 1%
-    demix.results <- demix.results[demix.results$V3 > 0.01, ]
+    demix.results <- demix.results[demix.results$abundance > 0.01, ]
 
     ## Extract cohort and remove excluded time points
     accessions <- metadata$err_accession[!grepl(exclude.time.points, metadata$Time_point) & metadata$Delivery_mode == cohort.name]
-    samples <- demix.results[demix.results$V1 %in% accessions, ]
+    samples <- demix.results[demix.results$accession %in% accessions, ]
 
     ## ## Rename the clusters from [Species]_Pop[0-999] to [Species]_ST[0-9999]_SC[0-999]
     new.clusters <- read.table(file = new.cluster.names.path, sep='\t', header = TRUE)
-    samples$V2 <- paste(species.name, "_", new.clusters$Cluster[match(samples$V2, new.clusters$PopPUNK)], sep = '')
+    samples$cluster <- new.clusters$Cluster[match(samples$cluster, new.clusters$PopPUNK)]
+    samples$cluster <- sub("E_col_SC([0-9]*)_ST([0-9]*)", "E_col_ST\\2_SC\\1", samples$cluster)
 
     ## ## Build the transition matrix
     mat <- GetTransitionMatrix(samples, metadata, paste(species.name, "_", sep = ''))
