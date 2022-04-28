@@ -1,5 +1,5 @@
 
-ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract = "E_col") {
+ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract) {
     ## Reads in the abundance matrix with rows corresponding to
     ## samples from each individual at each time point and cols to the
     ## identified lineages. Nonzero values in the matrix mean that the
@@ -81,19 +81,19 @@ ExtractTimeSeriesSamples <- function(abundances) {
     list("abundances" = time.series.subset, "individuals" = time.series.individuals)
 }
 
-GetTransitions <- function(time.series) {
+GetTransitions <- function(time.series, species.name) {
     ## Given an abundance matrix of observations from the same
     ## individual in temporal order (first observation == first row
     ## etc.), return the set of transitions observed in the time
     ## seires.
     n.steps <- nrow(time.series)
     transitions <- matrix("", nrow = n.steps - 1, ncol = 2)
-    oldstate <- paste(gsub("E_col_", "", colnames(time.series)[time.series[1, ] > 0]), collapse=' x ')
+    oldstate <- paste(gsub(species.name, "", colnames(time.series)[time.series[1, ] > 0]), collapse=' x ')
     for (i in 2:n.steps) {
-        oldstate[oldstate == ""] <- "No E. coli"
+        oldstate[oldstate == ""] <- paste("No ", species.name, sep = '')
         transitions[i - 1, 1] <- oldstate
-        newstate <- paste(gsub("E_col_", "", colnames(time.series)[time.series[i, ] > 0]), collapse=' x ')
-        newstate[newstate == ""] <- "No E. coli"
+        newstate <- paste(gsub(species.name, "", colnames(time.series)[time.series[i, ] > 0]), collapse=' x ')
+        newstate[newstate == ""] <- paste("No ", species.name, sep = '')
         transitions[i - 1, 2] <- newstate
         oldstate <- newstate
     }
@@ -128,11 +128,11 @@ GetTransitionMatrix <- function(cohort, full.metadata, species.name) {
 
     ## Extract transition matrix states
     states <- ExtractStateNames(time.series$abundances)
-    ## Remove the leading "E_col_" part
-    states <- gsub("E_col_", "", states)
+    ## Remove the leading "[species_name]_" part
+    states <- gsub(species.name, "", states)
 
     ## Extract transitions within each time series observation
-    transitions.within.individual <- by(time.series$abundances, time.series$individuals, GetTransitions)
+    transitions.within.individual <- by(time.series$abundances, time.series$individuals, function(x) GetTransitions(x, species.name))
 
     ## Build and return the transition matrix
     transition.mat <- BuildTransitionMatrix(transitions.within.individual, states)
@@ -157,7 +157,7 @@ ReadTransitionMatrix <- function(metadata.path, demix.path, new.cluster.names.pa
     ## ## Rename the clusters from [Species]_Pop[0-999] to [Species]_ST[0-9999]_SC[0-999]
     new.clusters <- read.table(file = new.cluster.names.path, sep='\t', header = TRUE)
     samples$cluster <- new.clusters$Cluster[match(samples$cluster, new.clusters$PopPUNK)]
-    samples$cluster <- sub("E_col_SC([0-9]*)_ST([0-9]*)", "E_col_ST\\2_SC\\1", samples$cluster)
+    samples$cluster <- sub("SC([0-9]*)_ST([0-9]*)", "ST\\2_SC\\1", samples$cluster)
 
     ## ## Build the transition matrix
     mat <- GetTransitionMatrix(samples, metadata, paste(species.name, "_", sep = ''))
