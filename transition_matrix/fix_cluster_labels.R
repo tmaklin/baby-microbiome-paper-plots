@@ -14,7 +14,6 @@ PrettyClusterLabels <- function(cluster.labels, SpeciesSpecificRenames) {
     cluster.labels
 }
 
-
 EcolPrettyLabels <- function(cluster.labels) {
     ## Change the special E. col cluster names
     ## ST1434 and ST548 coexistence are _probably_ false detections based on looking at the data manually
@@ -25,5 +24,10 @@ EcolPrettyLabels <- function(cluster.labels) {
     cluster.labels <- gsub("ST10_SC6", "ST10-1", cluster.labels)
     cluster.labels <- gsub("ST10_SC351", "ST10-2", cluster.labels)
     cluster.labels <- gsub("ST10_SC79", "ST10-3", cluster.labels)
+    cluster.labels
+}
+
+EfcsPrettyLabels <- function(cluster.labels) {
+    ## Change the special E. fcs cluster names
     cluster.labels
 }
