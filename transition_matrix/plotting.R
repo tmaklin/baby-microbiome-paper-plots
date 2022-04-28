@@ -40,11 +40,11 @@ PlotTransitionMatrix <- function(transition.matrix, title.main, title.adj, title
     title(main = title.main, line = title.line, adj = title.adj, outer = TRUE)
 }
 
-IntensityLegend <- function(ColorFunc, n.max) {
+IntensityLegend <- function(ColorFunc, n.max, title.vadj = -37.5) {
     par(xpd = TRUE)
     plot(c(0,2),c(0,10),type = 'n', axes = F,xlab = '', ylab = '')
     title(main = "Transitions", font.main = 1, cex.main = 1.31,
-          line = -37.5, adj = 0)
+          line = title.vadj, adj = 0)
     legend("left", legend = seq(1, n.max, l = n.max), col = ColorFunc(n.max), bty = 'n', pch = 19, cex = 1.7)
     par(xpd = FALSE)
 }
