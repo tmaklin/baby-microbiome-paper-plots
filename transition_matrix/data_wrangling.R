@@ -1,18 +1,6 @@
-
-ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract) {
-    ## Reads in the abundance matrix with rows corresponding to
-    ## samples from each individual at each time point and cols to the
-    ## identified lineages. Nonzero values in the matrix mean that the
-    ## lineage passed demix_check. The values themselves are filtered
-    ## relative abundances, where the filtering has set the values
-    ## that did not pass demix_check to zero.
-
-    ## Find cohort-specific samples in the metadata
-    order.in.metadata <- match(cohort$accession, full.metadata$err_accession)
-
-    ## Rename time points so they sort correctly with sort()
-    new.time.points <- full.metadata[order.in.metadata, ]$Time_point
-    new.time.points <- gsub("Mother", "10", new.time.points)
+RenameTimePointsForSorting <- function(time.points) {
+    ## Rename the time points so they sort correctly as characters
+    new.time.points <- gsub("Infancy", "30", new.time.points)
     new.time.points <- gsub("^21$", "23", new.time.points)
     new.time.points <- gsub("^18$", "22", new.time.points)
     new.time.points <- gsub("^17$", "21", new.time.points)
@@ -26,7 +14,23 @@ ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract) {
     new.time.points <- gsub("^7$", "13", new.time.points)
     new.time.points <- gsub("^6$", "12", new.time.points)
     new.time.points <- gsub("^4$", "11", new.time.points)
-    new.time.points <- gsub("Infancy", "30", new.time.points)
+    new.time.points <- gsub("Mother", "10", new.time.points)
+    new.time.points
+}
+
+ReadEcolAbundances <- function(cohort, full.metadata, what.to.extract) {
+    ## Reads in the abundance matrix with rows corresponding to
+    ## samples from each individual at each time point and cols to the
+    ## identified lineages. Nonzero values in the matrix mean that the
+    ## lineage passed demix_check. The values themselves are filtered
+    ## relative abundances, where the filtering has set the values
+    ## that did not pass demix_check to zero.
+
+    ## Find cohort-specific samples in the metadata
+    order.in.metadata <- match(cohort$accession, full.metadata$err_accession)
+
+    ## Rename time points so they sort correctly with sort()
+    new.time.points <- RenameTimePointsForSorting(full.metadata[order.in.metadata, ]$Time_point)
 
     ## Extract the column and row names
     cols <- unique(cohort$cluster)
