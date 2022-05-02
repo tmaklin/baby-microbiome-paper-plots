@@ -178,9 +178,9 @@ SwitchingPlot <- function(input.data, clusters.to.plot, individuals.to.plot, tim
                         y.coords <- y.coords + noise
                         prev.co.colonized <- co.colonized.at.time[[individual.name]][[as.character(times.to.plot[x.coords[1]])]]
                         current.co.colonized <- co.colonized.at.time[[individual.name]][[as.character(times.to.plot[x.coords[2]])]]
-                        lines(x = x.coords, y = y.coords, col = ifelse(switch.at.start.or.end, "gray80", "black"))
-                        lines(x = x.coords[1], y = y.coords[1], type = 'p', ifelse(prev.co.colonized, 4, 1), col = ifelse(prev.co.colonized, "red", "black"))
-                        lines(x = x.coords[2], y = y.coords[2], type = 'p', ifelse(current.co.colonized, 4, 1), col = ifelse(current.co.colonized, "red", "black"))
+                        lines(x = x.coords, y = y.coords, col = ifelse(switch.at.start.or.end, "gray90", "#92c5de"), lty = ifelse(switch.at.start.or.end, "dashed", "solid"))
+                        lines(x = x.coords[1], y = y.coords[1], type = 'p', ifelse(prev.co.colonized, 4, 1), col = ifelse(prev.co.colonized, "#ca0020", "gray40"))
+                        lines(x = x.coords[2], y = y.coords[2], type = 'p', ifelse(current.co.colonized, 4, 1), col = ifelse(current.co.colonized, "#ca0020", "gray40"))
                     }
                 }
             }
@@ -202,21 +202,28 @@ full.metadata <- read.table("../wgs_meta_delivery.tsv", sep = '\t', header=TRUE)
 
 ## Read in the cohort specific data
 caesarean <- ExtractCohortBySpecies(demix.check.data, full.metadata, "Caesarean", "E_col")
+vaginal <- ExtractCohortBySpecies(demix.check.data, full.metadata, "Vaginal", "E_col")
 
 ## Rename the clusters
 new.clusters <- read.table("../poppunk_cluster_info/E_col_new_clusters.tsv", sep='\t', header=TRUE)
 caesarean$demix_data <- RenameClusters(caesarean$demix_data, new.clusters)
 caesarean$demix_data$cluster <- PrettyClusterLabels(caesarean$demix_data$cluster, EcolPrettyLabels)
+vaginal$demix_data <- RenameClusters(vaginal$demix_data, new.clusters)
+vaginal$demix_data$cluster <- PrettyClusterLabels(vaginal$demix_data$cluster, EcolPrettyLabels)
 
-pdf(file = "caesarean_cohort_e_col_persistence.pdf", width = 11, height = 8)
-params <- PersistencePlot(caesarean)
-layout(matrix(1:2, nrow = 2, ncol = 1), heights = c(0.9, 0.1))
+pdf(file = "E_col_persistence.pdf", width = 11, height = 8)
+params <- PersistencePlot(vaginal)
+layout(matrix(c(1, 2, 3, 3), byrow = TRUE, nrow = 2, ncol = 2), heights = c(0.9, 0.1), widths = c(0.5, 0.5))
 par(mar = c(2, 4, 0, 2))
+SwitchingPlot(vaginal, params$clusters, params$individuals, params$timepoints)
+title("a)", line = -1, adj = 0.01, outer = TRUE)
+par(mar = c(2, 4, 0, 2))
+params <- PersistencePlot(caesarean)
 SwitchingPlot(caesarean, params$clusters, params$individuals, params$timepoints)
-title("Caesarean cohort E. colis", line = -1)
-par(mar = c(0, 0, 0, 0))
+title("b)", line = -1, adj = 0.52, outer = TRUE)
+par(mar = c(0, 0, 1, 0))
 plot.new()
-legend("top", legend = c("Co-colonized", "Single lineage", "First 21 days", "3-6 months"), ncol = 2, bty = 'n', col = c("red", "black", "black", "gray80"), pch = c(4, 1, NA, NA), lty = c(NA, NA, "solid", "solid"))
+legend("top", legend = c("Co-colonized", "Single lineage", "First 21 days", "3-6 months"), ncol = 2, bty = 'n', col = c("#ca0020", "gray40", "#92c5de", "gray90"), pch = c(4, 1, NA, NA), lty = c(NA, NA, "solid", "dashed"))
 dev.off()
 
 ## vals.to.plot <- cbind(
