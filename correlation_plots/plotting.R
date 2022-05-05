@@ -8,12 +8,12 @@ PointAreaLegend <- function() {
           font.main = 1, cex.main = 1.1)
 }
 
-CorrelationIntensityLegend <- function(ColorFunc) {
+CorrelationIntensityLegend <- function(ColorFunc, line.pos = -26) {
     par(xpd = TRUE)
     legend_image <- as.raster(matrix(rev(ColorFunc(41)), ncol=1))
     plot(c(0,2),c(0,1),type = 'n', axes = F,xlab = '', ylab = '')
     title(main = "Estimated\ncorrelation", font.main = 1, cex.main = 1.1,
-          line = -26, adj = 0.1)
+          line = line.pos, adj = 0.1)
     text(x=0.9, y = seq(0,1,l=5), labels = seq(-0.20,0.20,l=5), adj = 0, cex = 1.1)
     rasterImage(legend_image, 0, 0, 0.5,1)
 }
@@ -23,10 +23,10 @@ CorrelationPlot <- function(correlations, obs.counts, otu.names, title.main, tit
     plot(0, type = 'n', xlim = c(0, n.otus), ylim = c(0, n.otus),
          xaxt = 'n', yaxt = 'n', xlab = '', ylab = '', bty = 'n')
     ## top axis
-    axis(side = 3, at = 1:n.otus, labels = otu.names, las = 2, font = 3)
+    axis(side = 3, at = 1:n.otus, labels = otu.names, las = 2, font = 3, cex.axis = 1.1)
     abline(v = 1:n.otus, col = "gray90")
     ## left axis, labels in reverse order to match top axis
-    axis(side = 2, at = 1:n.otus, labels = rev(otu.names), las = 2, font = 3)
+    axis(side = 2, at = 1:n.otus, labels = rev(otu.names), las = 2, font = 3, cex.axis = 1.1)
     abline(h = 1:n.otus, col = "gray90")
     for (i in 1:n.otus) {
         for (j in 1:n.otus) {
@@ -47,7 +47,7 @@ CorrelationPlot <- function(correlations, obs.counts, otu.names, title.main, tit
 ReadDemixResults <- function() {
     demix.results <- read.table("../wgs_demix_check_high_confidence.tsv", sep='\t', header=TRUE)
     something.passes <- by(demix.results$cluster, demix.results$accession, function(x) unique(gsub("_NA|_SC[0-9]*_ST[0-9]*|_Pop[0-9]*|_SC[0-9]*", "", c(x))))
-    demix.results.ecoli <- read.table("../ecoli-new-reference/E_col_demix_results_top2.tsv", sep='\t', header=FALSE)
+    demix.results.ecoli <- read.table("../../ecoli-new-reference/E_col_demix_results_top2.tsv", sep='\t', header=FALSE)
     something.passes2 <- by(demix.results.ecoli$V2, demix.results.ecoli$V1, function(x) unique(gsub("_NA|_SC[0-9]*_ST[0-9]*|_Pop[0-9]*", "", c(x))))
     l <- list(something.passes, something.passes2)
     keys <- unique(unlist(lapply(l, names)))

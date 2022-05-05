@@ -22,7 +22,8 @@ caesarean.obs.counts <- DemixCheckCounts(demix.filter, caesarean.accessions, cae
 
 gradient <- colorRampPalette(rev(c("#ca0020", "#f4a582", "white", "#92c5de", "#0571b0")))
 
-pdf(file = "out/correlation_plots.pdf", width = 8, height = 4)
+## PDF
+pdf(file = "correlation_plots.pdf", width = 8, height = 4)
 par(mar = c(4, 4, 4, 2))
 layout(matrix(1:3, ncol = 3), widths = c(1, 1, 0.3), heights = c(1, 0.2))
 CorrelationPlot(vaginal.correlations, vaginal.obs.counts, gsub("_", ". ", rownames(vaginal.correlations)), "a)", 0.01, gradient)
