@@ -91,11 +91,11 @@ caesarean.counts <- list("no_mother_no_infancy" = ReadDemixCheckData("../wgs_met
 
 
 
-pdf(file = "upset_vaginal_no_mother.pdf", width = 4, height = 4)
+pdf(file = "upset_vaginal_no_mother.pdf", width = 8, height = 4)
 vnm <- SetupUpsetData(vaginal.counts$no_mother)
 upset(fromList(vnm$by_cluster), order.by = "freq", nsets = length(vnm$by_cluster), mb.ratio = c(0.3, 0.7), nintersects = 200)
 dev.off()
-pdf(file = "upset_caesarean_no_mother.pdf", width = 4, height = 4)
+pdf(file = "upset_caesarean_no_mother.pdf", width = 8, height = 4)
 vnm <- SetupUpsetData(caesarean.counts$no_mother)
 upset(fromList(vnm$by_cluster), order.by = "freq", nsets = length(vnm$by_cluster), mb.ratio = c(0.3, 0.7), nintersects = 200)
 dev.off()
