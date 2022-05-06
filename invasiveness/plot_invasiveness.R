@@ -20,10 +20,10 @@ for (i in 1:nrow(plotting.data)) {
     y.coords <- c(i, i)
     linecol <- "gray80"
     if (plotting.data$p.adj.BH[i] < 0.05) {
-        linecol <- ifelse(plotting.data$lower[i] > 1.0, "#d73027", "#4575b4")
+        linecol <- ifelse(plotting.data$lower[i] > 1.0, "#d73027", "#92c5de")
     }
     lines(x = x.coords, y = y.coords, col = linecol, lwd = 2)
 }
 lines(x = plotting.data$OR, y = 1:nrow(plotting.data), type = 'p', pch = 19)
-legend("bottomright", legend = c("Odds ratio", "95% confidence interval", "Invasive", "Opportunistic", "Commensal"), col = c("black", "black", "#d73027", "gray80", "#4575b4"), bty = 'n', lty = c(NA, 1, 1, 1, 1), lwd = c(NA, 2, 2, 2, 2), pch = c(19, NA, NA, NA, NA))
+legend("bottomright", legend = c("Odds ratio", "95% confidence interval", "Invasive", "Intermediate", "Commensal"), col = c("black", "black", "#d73027", "gray80", "#92c5de"), bty = 'n', lty = c(NA, 1, 1, 1, 1), lwd = c(NA, 2, 2, 2, 2), pch = c(19, NA, NA, NA, NA))
 dev.off()
