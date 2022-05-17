@@ -16,6 +16,9 @@ metadata$Individual[grepl("Mother", metadata$Time_point)] <- paste(metadata$Indi
 order.for.demix.data <- match(metadata$err_accession, e.colis$accession)
 combined.data <- cbind(e.colis[order.for.demix.data, ], metadata)
 
+## Collapse families
+combined.data$Individual <- gsub("[-_].*$", "", combined.data$Individual)
+
 ## Find identified clusters in each individuals times series
 cluster.by.individual <- by(combined.data$cluster, combined.data$Individual, function(x) unique(c(x)))
 
@@ -50,4 +53,4 @@ colnames(presabs) <- new.cluster.names
 
 ## Write results
 presabs <- cbind("Individual" = rownames(presabs), presabs)
-write.table(presabs, file = "E_col_colonization_matrix.tsv", sep='\t', col.names=TRUE, row.names=FALSE, quote=FALSE)
+write.table(presabs, file = "E_col_collapsed_colonization_matrix.tsv", sep='\t', col.names=TRUE, row.names=FALSE, quote=FALSE)
