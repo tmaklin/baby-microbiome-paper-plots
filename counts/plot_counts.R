@@ -43,21 +43,21 @@ ReadDemixCheckData <- function(metadata.path, demix.path, new.cluster.names.path
 vaginal.counts <- list("no_mother_no_infancy" = ReadDemixCheckData("../wgs_meta_delivery.tsv",
                                                                    "../wgs_demix_check_high_confidence.tsv",
                                                                    "../poppunk_cluster_info/all_new_clusters.tsv",
-                                                                   "Vaginal", "Mother|Infancy", "E_col|K_[a-z]*|S_aur|E_fcs|E_fcm*"),
+                                                                   "Vaginal", "Mother|Infancy", "E_col|K_[a-z]*|E_fcs|E_fcm*"),
                        "no_mother" = ReadDemixCheckData("../wgs_meta_delivery.tsv",
                                                         "../wgs_demix_check_high_confidence.tsv",
                                                         "../poppunk_cluster_info/all_new_clusters.tsv",
-                                                        "Vaginal", "Mother", "E_col|K_[a-z]*|S_aur|E_fcs|E_fcm*"))
+                                                        "Vaginal", "Mother", "E_col|K_[a-z]*|E_fcs|E_fcm*"))
 
 
 caesarean.counts <- list("no_mother_no_infancy" = ReadDemixCheckData("../wgs_meta_delivery.tsv",
                                                                    "../wgs_demix_check_high_confidence.tsv",
                                                                    "../poppunk_cluster_info/all_new_clusters.tsv",
-                                                                   "Caesarean", "Mother|Infancy", "E_col|K_[a-z]*|S_aur|E_fcs|E_fcm*"),
+                                                                   "Caesarean", "Mother|Infancy", "E_col|K_[a-z]*|E_fcs|E_fcm*"),
                        "no_mother" = ReadDemixCheckData("../wgs_meta_delivery.tsv",
                                                         "../wgs_demix_check_high_confidence.tsv",
                                                         "../poppunk_cluster_info/all_new_clusters.tsv",
-                                                        "Caesarean", "Mother", "E_col|K_[a-z]*|S_aur|E_fcs|E_fcm*"))
+                                                        "Caesarean", "Mother", "E_col|K_[a-z]*|E_fcs|E_fcm*"))
 
 vaginal.no_mother.counts <- table(gsub("([A-Z][.][ ][a-z][a-z][a-z]).*$", "\\1", vaginal.counts$no_mother$cluster))
 caesarean.no_mother.counts <- table(gsub("([A-Z][.][ ][a-z][a-z][a-z]).*$", "\\1", caesarean.counts$no_mother$cluster))
@@ -78,7 +78,7 @@ for (i in 1:n.clusters) {
 }
 
 diffs <- obs.mat[1, ] - obs.mat[2, ]
-pdf(file = "counts_differences.pdf", width = 6, height = 6)
+pdf(file = "counts_differences_no_saur.pdf", width = 6, height = 6)
 layout(matrix(c(1, 2), nrow = 2, ncol = 1), heights = c(0.85, 0.15))
 par(mar = c(5, 4, 0.5, 1))
 plot(y = n.clusters:1, x = diffs/colSums(obs.mat), xaxt = 'n', yaxt = 'n', ylab = '', xlab = "Relative difference", cex = log(abs(diffs) + 1, base = 5), col = ifelse(diffs < 0, "#92c5de", "#f4a582"), pch = 19, bty = 'n', cex.lab = 1.2)
