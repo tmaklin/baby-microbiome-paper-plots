@@ -6,6 +6,7 @@ EcolPrettyLabels <- function(cluster.labels) {
     cluster.labels <- gsub("E. col ST10 SC6", "E. col ST10-1", cluster.labels)
     cluster.labels <- gsub("E. col ST10 SC351", "E. col ST10-2", cluster.labels)
     cluster.labels <- gsub("E. col ST10 SC79", "E. col ST10-3", cluster.labels)
+    cluster.labels <- gsub("[[:space:]]SC[0-9]*$", "", cluster.labels)
     cluster.labels
 }
 
@@ -17,6 +18,7 @@ RenameClusters <- function(data, new.cluster.names.path) {
     data$cluster[has.new.names] <- sub("SC([0-9]*)_ST([0-9]*)", "ST\\2_SC\\1", data$cluster[has.new.names])
     data$cluster <- sub("^([A-Z])(_)([a-z]*)", "\\1. \\3", data$cluster)
     data$cluster <- gsub("_", " ", data$cluster)
+
     data
 }
 
@@ -92,10 +94,20 @@ caesarean.counts <- list("no_mother_no_infancy" = ReadDemixCheckData("../wgs_met
 
 
 pdf(file = "upset_vaginal_no_mother.pdf", width = 8, height = 4)
-vnm <- SetupUpsetData(vaginal.counts$no_mother)
-upset(fromList(vnm$by_cluster), order.by = "freq", nsets = length(vnm$by_cluster), mb.ratio = c(0.3, 0.7), nintersects = 200)
+vnm1 <- SetupUpsetData(vaginal.counts$no_mother)
+vnm2 <- SetupUpsetData(caesarean.counts$no_mother)
+common.counts <- c(unlist(lapply(vnm1$by_cluster, length)), unlist(lapply(vnm2$by_cluster, length)))
+common.counts <- tapply(common.counts, names(common.counts), sum)
+common.counts <- sort(common.counts)
+## ordd1 <- match(names(common.counts), names(vnm1$by_cluster))
+## ordd1 <- ordd1[!is.na(ordd1)]
+## names(vnm1$by_cluster[ordd1])
+## ordd2 <- match(names(common.counts), names(vnm2$by_cluster))
+## ordd2 <- ordd2[!is.na(ordd2)]
+## names(vnm2$by_cluster[ordd2])
+upset(fromList(vnm1$by_cluster), sets = names(common.counts)[names(common.counts) %in% names(vnm1$by_cluster)], keep.order = TRUE, nsets = length(vnm1$by_cluster), mb.ratio = c(0.3, 0.7), nintersects = 200)
 dev.off()
 pdf(file = "upset_caesarean_no_mother.pdf", width = 8, height = 4)
-vnm <- SetupUpsetData(caesarean.counts$no_mother)
-upset(fromList(vnm$by_cluster), order.by = "freq", nsets = length(vnm$by_cluster), mb.ratio = c(0.3, 0.7), nintersects = 200)
+upset(fromList(vnm2$by_cluster), keep.order = TRUE, sets = names(common.counts)[names(common.counts) %in% names(vnm2$by_cluster)], nsets = length(vnm2$by_cluster), mb.ratio = c(0.3, 0.7), nintersects = 200)
 dev.off()
+
