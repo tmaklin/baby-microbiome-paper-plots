@@ -5,13 +5,13 @@ PlotInvasiveness <- function(plotting.data) {
     axis(side = 2, at = 1:nrow(plotting.data), labels = plotting.data$Label, las = 2)
     abline(v = 1.0, lty = "dotted", col = "gray40")
     for (i in 1:nrow(plotting.data)) {
-        x.coords <- c(plotting.data$lower[i], plotting.data$upper[i])
-        y.coords <- c(i, i)
         linecol <- "gray80"
         if (plotting.data$p.adj.BH[i] < 0.05) {
             linecol <- ifelse(plotting.data$lower[i] > 1.0, "#d73027", "#92c5de")
         }
+        x.coords <- c(plotting.data$lower[i], plotting.data$upper[i])
+        y.coords <- c(i, i)
         lines(x = x.coords, y = y.coords, col = linecol, lwd = 2)
+        lines(x = plotting.data$OR[i], y = i, type = 'p', pch = 19, col = linecol)
     }
-    lines(x = plotting.data$OR, y = 1:nrow(plotting.data), type = 'p', pch = 19)
 }
