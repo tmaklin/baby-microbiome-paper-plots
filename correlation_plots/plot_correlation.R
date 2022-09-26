@@ -22,15 +22,27 @@ caesarean.obs.counts <- DemixCheckCounts(demix.filter, caesarean.accessions, cae
 
 gradient <- colorRampPalette(rev(c("#ca0020", "#f4a582", "white", "#92c5de", "#0571b0")))
 
-## PDF
-pdf(file = "correlation_plots.pdf", width = 8, height = 4)
+a <- match(rownames(caesarean.correlations), rownames(vaginal.correlations))
+b <- match(colnames(caesarean.correlations), colnames(vaginal.correlations))
+
+tmp <- as.data.frame(as.matrix(vaginal.correlations)[a, b])
+rownames(tmp) <- rownames(caesarean.correlations)
+colnames(tmp) <- colnames(caesarean.correlations)
+tmp[lower.tri(tmp)] <- caesarean.correlations[lower.tri(caesarean.correlations)]
+tmp[is.na(tmp)] <- 0
+
+tmp.counts <- as.data.frame(as.matrix(vaginal.obs.counts)[a, b])
+rownames(tmp.counts) <- rownames(caesarean.obs.counts)
+colnames(tmp.counts) <- colnames(caesarean.obs.counts)
+tmp.counts[lower.tri(tmp.counts)] <- caesarean.obs.counts[lower.tri(caesarean.obs.counts)]
+tmp.counts[is.na(tmp.counts)] <- 0
+
+pdf(file = "correlation_plot_revised.pdf", width = 8, height = 8)
 par(mar = c(4, 4, 4, 2))
-layout(matrix(1:3, ncol = 3), widths = c(1, 1, 0.3), heights = c(1, 0.2))
-CorrelationPlot(vaginal.correlations, vaginal.obs.counts, gsub("_", ". ", rownames(vaginal.correlations)), "a)", 0.01, gradient)
-par(mar = c(4, 4, 4, 2))
-CorrelationPlot(caesarean.correlations, caesarean.obs.counts, gsub("_", ". ", rownames(caesarean.correlations)), "b)", 0.46, gradient)
+layout(matrix(1:2, ncol = 2), widths = c(1, 0.3), heights = c(1, 0.2))
+CorrelationPlot(tmp, tmp.counts, gsub("_", ". ", rownames(tmp)), "", 0.01, gradient)
 par(mar = c(4, 0, 4, 0))
-CorrelationIntensityLegend(gradient)
+CorrelationIntensityLegend(gradient, -33.5)
 par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), mar=c(0, 0, 0, 0), new=TRUE)
 PointAreaLegend()
 dev.off()

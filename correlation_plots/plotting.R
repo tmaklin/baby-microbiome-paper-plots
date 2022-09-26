@@ -1,10 +1,13 @@
 
 PointAreaLegend <- function() {
     plot(c(0,1),c(0,1),type = 'n', axes = F,xlab = '', ylab = '')
-    legend("bottom", legend = c("0-1", 5, 10, 20, 100), fill = "white", pch = 19,
+    legend(x = 0.25, y = 0.07, legend = c("0-1", 5, 10, 20, 100), fill = "white", pch = 19,
            border = "white", bty = 'n', ncol = 5,
            pt.cex = log(c(1, 5, 10, 20, 100),base = 6) + 1, inset = c(0, 0.07))
-    title(main = "# of times a lineage was reliably\nidentified from both species", line = -30,
+    legend(x = 0.0, y = 0.05, legend = c("Vaginal birth", "Caesarean delivery"), fill = "white", pch = c(1, 19),
+           border = "white", bty = 'n', ncol = 1,
+           pt.cex = log(c(5, 5),base = 6) + 1, inset = c(0, 0.07))
+    title(main = "# of times a lineage was reliably\nidentified from both species", line = -39.7,
           font.main = 1, cex.main = 1.1)
 }
 
@@ -28,14 +31,21 @@ CorrelationPlot <- function(correlations, obs.counts, otu.names, title.main, tit
     ## left axis, labels in reverse order to match top axis
     axis(side = 2, at = 1:n.otus, labels = rev(otu.names), las = 2, font = 3, cex.axis = 1.1)
     abline(h = 1:n.otus, col = "gray90")
+    upper.tri.check <- upper.tri(correlations)
     for (i in 1:n.otus) {
         for (j in 1:n.otus) {
+            is.lower.tri <- upper.tri.check[i, j]
             if (correlations[i, j] != 0) {
                 coord.x <- i
                 coord.y <- n.otus - j + 1 ## filled from top->down
                 ## assume correlations range in [-0.20, 0.20] and counts in [0, 100]
                 color.id <- round(correlations[i, j], digits = 2)*100 + 21
                 size <- log(obs.counts[i, j] + 1, base = 6) + 1
+                if (is.lower.tri) {
+                    lines(x = coord.x, y = coord.y, type = 'p', pch = 19,
+                          cex = size + 0.5, col = "black")
+
+                }
                 lines(x = coord.x, y = coord.y, type = 'p', pch = 19,
                       cex = size, col = ColorFunc(41)[color.id])
             }
