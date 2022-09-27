@@ -1,6 +1,6 @@
 RenameTimePointsForSorting <- function(time.points) {
     ## Rename the time points so they sort correctly as characters
-    new.time.points <- gsub("Infancy", "30", new.time.points)
+    new.time.points <- gsub("Infancy", "30", time.points)
     new.time.points <- gsub("^21$", "23", new.time.points)
     new.time.points <- gsub("^18$", "22", new.time.points)
     new.time.points <- gsub("^17$", "21", new.time.points)
