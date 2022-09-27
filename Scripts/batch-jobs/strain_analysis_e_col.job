@@ -1,0 +1,88 @@
+#!/bin/bash
+#SBATCH --job-name=wgs-msweep-e-col-strain-abundances
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-e-col-strain-abundances.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-e-col-strain-abundances.err
+#SBATCH -t 23:59:59
+#SBATCH -M ukko
+#SBATCH -p medium
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task 10
+#SBATCH --mem-per-cpu=8192
+#SBATCH --hint=nomultithread
+#SBATCH --array=41-232
+
+set -euxo pipefail
+
+export LC_ALL="C"
+export LANG="C"
+
+## module load GCC/10.2.0 CMake/3.18.4-GCCcore-10.2.0
+module load CMake GCC
+
+nthreads=10
+
+species="E_col"
+
+basedir=$WRKDIR/wgs-msweep
+info=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $basedir/out/$species""_new_bins.txt)
+accession=$(echo $info | grep -o "ERR[0-9]*")
+
+bin=$basedir/out/mGEMS/$info
+outdir=$basedir/out/mGEMS/$accession/$species
+if [ -d "$outdir" ];
+then
+    if [ -n "$(find $outdir -prune -empty -type d 2>/dev/null)" ];
+    then
+	echo $outdir" already exists and is empty"
+    else
+	rm -rf $outdir/*
+    fi
+else
+    mkdir $outdir
+fi
+
+## Extract the species reads from the full sample
+fwd=$basedir/data/wgs-reads/$accession""_1.fastq.gz
+rev=$basedir/data/wgs-reads/$accession""_2.fastq.gz
+$USERAPPL/mGEMS/build/bin/mGEMS extract --bins $bin -r $fwd,$rev -o $outdir
+
+## Pseudoalign the species reads against the species-level index
+fwd=$outdir/$species""_1.fastq.gz
+rev=$outdir/$species""_2.fastq.gz
+
+fwdaln=$basedir/out/themisto/$accession/$species""_1.aln
+revaln=$basedir/out/themisto/$accession/$species""_2.aln
+
+indexdir=$WRKDIR/cocov2-reference-sequences/$species/$species""_index
+index=$indexdir/index
+tmpdir=$basedir/out/themisto/$accession/$species""_tmp
+if [ -d "$tmpdir" ];
+then
+    if [ -n "$(find $tmpdir -prune -empty -type d 2>/dev/null)" ];
+    then
+	echo $tmpdir" already exists and is empty"
+    else
+	rm -rf $tmpdir/*
+    fi
+else
+    mkdir $tmpdir
+fi
+
+grouping=$indexdir/index_grouping.txt
+
+$USERAPPL/themisto-v2.1.0/build/bin/themisto pseudoalign -q $fwd -o $fwdaln -i $index -t $nthreads --temp-dir $tmpdir --rc --gzip-output --sort-output
+$USERAPPL/themisto-v2.1.0/build/bin/themisto pseudoalign -q $rev -o $revaln -i $index -t $nthreads --temp-dir $tmpdir --rc --gzip-output --sort-output
+
+fwdaln=$fwdaln"".gz
+revaln=$revaln"".gz
+
+## Estimate abundances
+probs=$outdir/$species""_probs.csv.xz
+abundances=$outdir/$species""_abundances.txt
+
+$USERAPPL/mSWEEP-v1.6.0_beta/bin/mSWEEP-omp --themisto-1 $fwdaln --themisto-2 $revaln -i $grouping -t $nthreads -o $outdir/$species --print-probs | xz -c --threads $nthreads > $probs
+
+
+## Bin the species level reads
+$USERAPPL/mGEMS/build/bin/mGEMS bin --min-abundance 0.000001 --themisto-alns $fwdaln,$revaln -o $outdir --probs $probs -a $abundances --index $indexdir -i $grouping
+xz --extreme --threads $nthreads $outdir/*.bin

@@ -1,0 +1,80 @@
+#!/bin/bash
+#SBATCH --job-name=wgs-msweep-assemble-ecoli
+#SBATCH --output=/wrk-vakka/users/temaklin/wgs-msweep/logs/wgs-msweep-assemble-ecoli.out
+#SBATCH -e /wrk-vakka/users/temaklin/wgs-msweep/logs/wgs-msweep-assemble-ecoli.err
+#SBATCH -t 07:59:59
+#SBATCH -M ukko
+#SBATCH -p short
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH -c 2
+#SBATCH --mem-per-cpu=2048
+#SBATCH --hint=compute_bound
+#SBATCH --hint=nomultithread
+#SBATCH --array=1-1124
+
+export LC_ALL="C"
+export LANG="C"
+
+nthreads=${SLURM_CPUS_PER_TASK}
+memgigas=$(( nthreads * 2 ))
+
+basedir=$WRKDIR/wgs-msweep
+
+samples=$basedir/demix_check_ecol.tsv
+sample=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $samples)
+accession=$(echo $sample | cut -f1 -d' ')
+cluster=$(echo $sample | cut -f2 -d' ')
+avgsize=$(echo $sample | cut -f4 -d' ')
+avgsize=${avgsize%.*}
+species=$(echo $cluster | grep -o "[A-Z][_][a-z][a-z][a-z]")
+
+mgemsdir=$basedir/out/mGEMS/$accession/$species
+
+fwd=$mgemsdir/$species""_1.fastq.gz
+rev=$mgemsdir/$species""_2.fastq.gz
+
+outdir=$mgemsdir/$cluster""_assembly
+
+if [ -d "$outdir" ];
+then
+    if [ -n "$(find $outdir -prune -empty -type d 2>/dev/null)" ];
+    then
+	echo $outdir" already exists and is empty"
+    else
+	rm -rf $outdir/*
+    fi
+else
+    mkdir $outdir
+fi
+
+module load GCC/10.2.0 CMake/3.18.4-GCCcore-10.2.0
+
+$USERAPPL/mGEMS/bin/mGEMS-amd extract --bins $mgemsdir/$cluster"".bin.xz -r $fwd,$rev -o $outdir
+
+grpfwd=$outdir/$cluster""_1.fastq.gz
+grprev=$outdir/$cluster""_2.fastq.gz
+
+corrfwd=$outdir/corr_1.fastq.gz
+corrrev=$outdir/corr_2.fastq.gz
+
+$USERAPPL/fastp/fastp.0.23.1 --in1 $grpfwd --in2 $grprev --out1 $corrfwd --out2 $corrrev --thread $nthreads
+
+source ~/.bashrc
+conda activate shovill
+
+set -euxo pipefail
+
+shovill --R1 $corrfwd --R2 $corrrev --outdir $outdir/shovill --cpus $nthreads --ram $memgigas --noreadcorr --gsize $avgsize --mincov 1
+rm $corrfwd
+rm $corrrev
+rm $grpfwd
+rm $grprev
+mv $outdir/shovill/contigs.fa $outdir/$accession""_$cluster""_contigs.fa
+rm -rf $outdir/shovill
+pigz -11 -p $nthreads $outdir/$accession""_$cluster""_contigs.fa
+
+newcluster=$(grep "$cluster$" $basedir/../cocov2-reference-sequences/E_col/new_clusters.tsv | cut -f1)
+mv $outdir/$accession""_$cluster""_contigs.fa.gz $basedir/out/assemblies/$species/$accession""_$newcluster""_contigs.fa.gz
+
+rm -rf $outdir

@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name=wgs-msweep-setup-demix-check-kvar
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-setup-demix-check-kvar.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-setup-demix-check-kvar.err
+#SBATCH -t 07:59:59
+#SBATCH -M ukko
+#SBATCH -p short
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH -c 8
+#SBATCH --mem-per-cpu=2048
+#SBATCH --hint=compute_bound
+#SBATCH --hint=nomultithread
+#SBATCH --array=20-20
+
+export LC_ALL="C"
+export LANG="C"
+
+nthreads=${SLURM_CPUS_PER_TASK}
+
+basedir=$WRKDIR/cocov2-reference-sequences
+
+refdir=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $basedir/ref_info_files.txt)
+
+source ~/.bashrc
+conda activate demix_check
+
+python3 $USERAPPL/demix_check/demix_check.py --mode_setup --ref $refdir --no_build_index --threads $nthreads

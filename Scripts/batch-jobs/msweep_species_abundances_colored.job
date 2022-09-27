@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --job-name=wgs-msweep-species-abundances-isolates-colored
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/wgs-mSWEEP-species-abundances-isolates-colored.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/wgs-mSWEEP-species-abundances-isolates-colored.err
+#SBATCH -t 07:59:59
+#SBATCH -M ukko
+#SBATCH -p short
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task 1
+#SBATCH --mem-per-cpu=4096
+#SBATCH --hint=nomultithread
+#SBATCH --array=11-1679
+
+set -euxo pipefail
+
+export LC_ALL="C"
+export LANG="C"
+
+module load CMake GCC
+
+nthreads=${SLURM_CPUS_PER_TASK}
+
+basedir=$WRKDIR/wgs-msweep
+
+accession=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $basedir/out/wgs_reads_accessions.txt)
+fwd=$basedir/out/themisto/$accession""/$accession""_1.aln.xz
+rev=$basedir/out/themisto/$accession""/$accession""_2.aln.xz
+
+outdir=$basedir/out/mSWEEP/$accession
+grouping=$basedir/reference/species_msweep_indicators.txt
+
+if [ -d "$outdir" ];
+then
+   rm -rf $outdir/*
+else
+   mkdir $outdir
+fi
+
+$USERAPPL/mSWEEP-v1.6.0_beta/bin/mSWEEP-amd --themisto-1 $fwd --themisto-2 $rev -i $grouping -t $nthreads -o $outdir/$accession --print-probs | xz -zce --threads $nthreads > $outdir/$accession""_probs.csv.xz

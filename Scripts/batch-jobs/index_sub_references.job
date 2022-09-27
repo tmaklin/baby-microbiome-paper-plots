@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH --job-name=index-ecoli-sub-references-updated
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/index-ecoli-sub-references.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/index-ecoli-sub-references.err
+#SBATCH -t 23:59:59
+#SBATCH -M ukko2
+#SBATCH -p bigmem
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH -c 24
+#SBATCH --mem-per-cpu=16384
+#SBATCH --array=2-2
+#SBATCH --hint=nomultithread
+#SBATCH --hint=compute_bound
+
+nthreads=24
+memmegas=393000
+
+target=$(sed -n "${SLURM_ARRAY_TASK_ID}p" target_species.txt)
+
+module load CMake GCC
+
+echo "Indexing "$target" subreference"
+
+fastafile=$target/$target""_sequences.fasta
+indexdir=$target/$target""_index
+index=$indexdir/index
+tmpdir=$indexdir/tmp
+
+mkdir $indexdir
+mkdir $tmpdir
+
+$USERAPPL/themisto-v2.1.0/build/bin/themisto build -k 31 -i $fastafile -o $index -m $memmegas -t $nthreads --temp-dir $tmpdir
+
+echo "Indexed "$target" subreference"

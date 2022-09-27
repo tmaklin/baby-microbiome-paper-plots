@@ -1,0 +1,7 @@
+## Scripts and batch jobs used for the baby microbiome analyses
+### Files
+- create_multifasta.sh: the script used to create the reference multifasta from the assemblies.
+- batch-jobs/: folder containing the batch job scripts that were used to run the analyses.
+               Note: the scripts do not fully reproduce the analyses as they were run several times
+	       with modified inputs, but the scripts document the options used for the different programs.
+- batch-jobs-inputs: example inputs used with the batch job scripts.

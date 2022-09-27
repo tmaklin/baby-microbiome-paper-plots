@@ -1,0 +1,43 @@
+#!/bin/bash
+#SBATCH --job-name=fit-poppunk-model-test
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/fit-poppunk-model-test.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/fit-poppunk-model-test.err
+#SBATCH -t 23:59:59
+#SBATCH -M ukko2
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task 8
+#SBATCH --mem-per-cpu=4096
+#SBATCH --hint=nomultithread
+#SBATCH --hint=compute_bound
+#SBATCH --array=2-2
+
+export LC_ALL="C"
+export LANG="C"
+
+basedir=$WRKDIR/cocov2-reference-sequences
+
+source ~/.bashrc
+
+set -euxo pipefail
+
+conda activate poppunk-v2.4.0
+
+nthreads=${SLURM_CPUS_PER_TASK}
+
+species=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $basedir/target_species.txt)
+
+refdb=$basedir/$species/pop_db
+
+
+for K in {2..32}; do
+    outdir=$basedir/$species/pop_fit_bgmm_K$K
+
+    if [ -d "$outdir" ];
+    then
+	rm -rf $outdir
+    else
+	echo "$outdir doesn't exist, will be created by poppunk."
+    fi
+
+    poppunk --fit-model bgmm --K $K --ref-db $refdb --output $outdir --threads $nthreads --max-a-dist 0.9 --max-pi-dist 0.9 2> $basedir/$species/pop_$K""_log.txt
+done

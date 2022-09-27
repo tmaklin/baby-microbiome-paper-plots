@@ -1,0 +1,45 @@
+#!/bin/bash
+#SBATCH --job-name=wgs-msweep-demix-check
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-demix-check.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-demix-check.err
+#SBATCH -t 07:59:59
+#SBATCH -M ukko2,ukko
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task 1
+#SBATCH --mem-per-cpu=2048
+#SBATCH --array=2-1661%100
+
+export LC_ALL="C"
+export LANG="C"
+
+module load GCC/10.2.0 CMake/3.18.4-GCCcore-10.2.0
+
+nprocs=1
+nthreads=1
+
+basedir=/wrk/users/temaklin/wgs-msweep
+bin=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $basedir/out/species_bins.txt)
+accession=$(echo $bin | grep -o "ERR[0-9]*")
+species=$(echo $bin | grep -o "[A-Z][_][a-z][a-z][a-z]")
+
+strainbins=$(ls $basedir/out/mGEMS/$accession/$species/*.bin.xz | sed 's/.*.\///g' | tr '\n' ',' | sed 's/,$//')
+
+cd $basedir/out/mGEMS/$accession/$species
+
+fwd=$species""_1.fastq.gz
+rev=$species""_2.fastq.gz
+
+outdir=all_reads
+mkdir $outdir
+
+/proj/temaklin/mGEMS/build/bin/mGEMS extract --bins $strainbins -r $fwd,$rev -o $outdir
+
+module purge
+source ~/.bashrc
+conda activate demix_check
+
+refdir=/wrk/users/temaklin/cocov2-reference-sequences/$species
+
+python3 /proj/temaklin/demix_check/demix_check.py --mode_check --binned_reads_dir $outdir --msweep_abun $basedir/out/mSWEEP/$accession/$species""_abundances.txt --out_dir ./ --ref $refdir --min_abun 0.000001 --plots
+
+rm -rf all_reads

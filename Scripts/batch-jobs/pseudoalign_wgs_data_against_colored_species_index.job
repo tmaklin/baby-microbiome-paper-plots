@@ -1,0 +1,61 @@
+#!/bin/bash
+#SBATCH --job-name=wgs-msweep-pseudoalign-colored
+#SBATCH --output=/wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-pseudoalign-colored.out
+#SBATCH -e /wrk/users/temaklin/wgs-msweep/logs/wgs-msweep-pseudoalign-colored.err
+#SBATCH -t 07:59:59
+#SBATCH -M ukko
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH -c 8
+#SBATCH --mem-per-cpu=2048
+#SBATCH --mail-type=NONE
+#SBATCH --mail-user=tommi.maklin@helsinki.fi
+#SBATCH --hint=compute_bound
+#SBATCH --hint=nomultithread
+#SBATCH --array=1-1679
+
+set -euxo pipefail
+
+export LC_ALL="C"
+export LANG="C"
+
+module load CMake GCC
+
+nthreads=${SLURM_CPUS_PER_TASK}
+
+basedir=$WRKDIR/wgs-msweep
+indexdir=$basedir/reference/colored-index-isolates/index
+
+accession=$(sed -n "${SLURM_ARRAY_TASK_ID} p" $basedir/out/wgs_reads_accessions.txt)
+
+outdir=$basedir/out/themisto/$accession
+tmpdir=$outdir/tmp
+
+if [ -d "$outdir" ];
+then
+    rm -rf $outdir/*
+else
+    mkdir $outdir
+fi
+mkdir $tmpdir
+
+fwd=$basedir/data/wgs-reads/$accession""_1.fastq.gz
+rev=$basedir/data/wgs-reads/$accession""_2.fastq.gz
+
+fwdout=$outdir/$accession""_1.aln
+revout=$outdir/$accession""_2.aln
+
+infiles=$tmpdir/infile-list.txt
+outfiles=$tmpdir/outfile-list.txt
+
+echo $fwd > $infiles
+echo $rev >> $infiles
+echo $fwdout > $outfiles
+echo $revout >> $outfiles
+
+$USERAPPL/themisto-v2.1.0/build/bin/themisto-amd pseudoalign --query-file-list $infiles --out-file-list $outfiles -i $indexdir --temp-dir $tmpdir -t $nthreads --sort-output --rc
+
+xz --threads $nthreads $fwdout
+xz --threads $nthreads $revout
+
+rm -rf $tmpdir
