@@ -153,6 +153,7 @@ SwitchingPlot <- function(input.data, clusters.to.plot, individuals.to.plot, tim
     axis(side = 1, at = 1:n.times.to.plot, labels = xaxlabs)
     axis(side = 2, at = 1:n.clusters.to.plot, labels = gsub("E_col_", "", clusters.to.plot), las = 2, cex.axis = 1.5)
 
+    s <- 0
     for (i in 1:n.individuals.to.plot) {
         individual.name <- individuals.to.plot[i]
         plotting.subset <- plotting.data[plotting.data$Individual %in% individual.name, ]
@@ -176,6 +177,10 @@ SwitchingPlot <- function(input.data, clusters.to.plot, individuals.to.plot, tim
                         start.or.end <- x.coords[1] == 1 || x.coords[2] == n.times.to.plot
                         switch.at.end <- (x.coords[2] == n.times.to.plot)## && (y.coords[1] != y.coords[2])
                         switch.at.start <- (x.coords[1] == 1)## && (y.coords[1] != y.coords[2])
+                        if (switch.at.end && y.coords[1] != y.coords[2]) {
+                            s <- s + 1
+                            print(s)
+                        }
                         y.coords <- y.coords + noise
                         prev.co.colonized <- co.colonized.at.time[[individual.name]][[as.character(times.to.plot[x.coords[1]])]]
                         current.co.colonized <- co.colonized.at.time[[individual.name]][[as.character(times.to.plot[x.coords[2]])]]
@@ -221,7 +226,7 @@ caesarean$demix_data$cluster <- PrettyClusterLabels(caesarean$demix_data$cluster
 vaginal$demix_data <- RenameClusters(vaginal$demix_data, new.clusters)
 vaginal$demix_data$cluster <- PrettyClusterLabels(vaginal$demix_data$cluster, EcolPrettyLabels)
 
-pdf(file = "E_col_persistence.pdf", width = 18, height = 8)
+pdf(file = "E_col_persistence_2.pdf", width = 18, height = 8)
 params <- PersistencePlot(vaginal)
 layout(matrix(c(1, 2, 3, 3), byrow = TRUE, nrow = 2, ncol = 2), heights = c(0.9, 0.1), widths = c(0.5, 0.5))
 par(mar = c(2, 5, 0, 2))
@@ -262,3 +267,115 @@ for (i in 1:nrow(vals.to.plot)) {
                    vals.to.plot[i, 1], vals.to.plot[i, 2])
     dev.off()
 }
+
+
+
+length(unique(vaginal$metadata$Individual[vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"]))
+
+length(unique(caesarean$metadata$Individual[caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"]))
+
+length(unique(vaginal$metadata$Individual[vaginal$metadata$Time_point == "4" & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"]))
+
+length(unique(vaginal$metadata$Individual[vaginal$metadata$Time_point %in% c("6", "7") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"]))
+
+
+length(unique(vaginal$metadata$Individual[vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"]))
+
+in.first.time.point <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == "4" & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], vaginal$demix_data$cluster[vaginal$metadata$Time_point == "4" & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], sep='-')
+
+in.second.time.point <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point %in% c("6", "7") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], vaginal$demix_data$cluster[vaginal$metadata$Time_point %in% c("6", "7") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], sep='-')
+
+length(unique(gsub("-.*$", "", in.first.time.point[in.first.time.point %in% in.second.time.point])))
+
+
+######
+
+length(unique(caesarean$metadata$Individual[caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"]))
+
+length(unique(caesarean$metadata$Individual[caesarean$metadata$Time_point == "4" & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"]))
+
+length(unique(caesarean$metadata$Individual[caesarean$metadata$Time_point %in% c("6", "7") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"]))
+
+
+
+in.first.time.point <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "4" & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], caesarean$demix_data$cluster[caesarean$metadata$Time_point == "4" & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], sep='-')
+
+in.second.time.point <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point %in% c("6", "7") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], caesarean$demix_data$cluster[caesarean$metadata$Time_point %in% c("6", "7") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], sep='-')
+
+length(unique(gsub("-.*$", "", in.first.time.point[in.first.time.point %in% in.second.time.point])))
+
+
+###
+
+in.first.time.point1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point %in% c("4", "5", "6", "7", "8") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], vaginal$demix_data$cluster[vaginal$metadata$Time_point %in% c("4", "5", "6", "7", "8") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], sep='-')
+in.mother1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == "Mother"], vaginal$demix_data$cluster[vaginal$metadata$Time_point == "Mother"], sep='-')
+sum(in.mother1 %in% in.first.time.point1)
+length(in.mother1)
+
+in.first.time.point2 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point %in% c("4", "5", "6", "7", "8") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], caesarean$demix_data$cluster[caesarean$metadata$Time_point %in% c("4", "5", "6", "7", "8") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], sep='-')
+in.mother2 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Mother"], caesarean$demix_data$cluster[caesarean$metadata$Time_point == "Mother"], sep='-')
+sum(in.mother2 %in% in.first.time.point2)
+length(in.mother2)
+
+####
+
+
+in.first.time.point1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == c("Infancy") & vaginal$metadata$Time_point != "Mother"], vaginal$demix_data$cluster[vaginal$metadata$Time_point == "Infancy" & vaginal$metadata$Time_point != "Mother"], sep='-')
+in.mother1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == "Mother"], vaginal$demix_data$cluster[vaginal$metadata$Time_point == "Mother"], sep='-')
+sum(in.mother1 %in% in.first.time.point1)
+length(in.mother1)
+
+in.first.time.point2 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Infancy" & caesarean$metadata$Time_point != "Mother"], caesarean$demix_data$cluster[caesarean$metadata$Time_point %in% c("Infancy") & caesarean$metadata$Time_point != "Mother"], sep='-')
+in.mother2 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Mother"], caesarean$demix_data$cluster[caesarean$metadata$Time_point == "Mother"], sep='-')
+sum(in.mother2 %in% in.first.time.point2)
+length(in.mother2)
+
+
+########
+
+co.colonized <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point != "Infancy" & vaginal$metadata$Time_point != "Mother"], vaginal$metadata$Time_point[vaginal$metadata$Time_point != "Infancy" & vaginal$metadata$Time_point != "Mother"], sep='-')
+length(unique(gsub("-.$", "", co.colonized <- co.colonized[duplicated(co.colonized)])))
+co.colonized <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point != "Infancy" & caesarean$metadata$Time_point != "Mother"], caesarean$metadata$Time_point[caesarean$metadata$Time_point != "Infancy" & caesarean$metadata$Time_point != "Mother"], sep='-')
+length(unique(gsub("-.$", "", co.colonized <- co.colonized[duplicated(co.colonized)])))
+
+co.colonized <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == "Infancy" & vaginal$metadata$Time_point != "Mother"], vaginal$metadata$Time_point[vaginal$metadata$Time_point == "Infancy" & vaginal$metadata$Time_point != "Mother"], sep='-')
+length(unique(gsub("-.$", "", co.colonized <- co.colonized[duplicated(co.colonized)])))
+co.colonized <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Infancy" & caesarean$metadata$Time_point != "Mother"], caesarean$metadata$Time_point[caesarean$metadata$Time_point == "Infancy" & caesarean$metadata$Time_point != "Mother"], sep='-')
+length(unique(gsub("-.$", "", co.colonized <- co.colonized[duplicated(co.colonized)])))
+
+co.colonized <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == "Mother"], vaginal$metadata$Time_point[vaginal$metadata$Time_point == "Mother"], sep='-')
+length(unique(gsub("-.$", "", co.colonized <- co.colonized[duplicated(co.colonized)])))
+co.colonized <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Mother"], caesarean$metadata$Time_point[caesarean$metadata$Time_point == "Mother"], sep='-')
+length(unique(gsub("-.$", "", co.colonized <- co.colonized[duplicated(co.colonized)])))
+
+
+in.first.time.point1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == c("Infancy") & vaginal$metadata$Time_point != "Mother"], vaginal$demix_data$cluster[vaginal$metadata$Time_point == "Infancy" & vaginal$metadata$Time_point != "Mother"], sep='-')
+in.mother1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point == "Mother"], vaginal$demix_data$cluster[vaginal$metadata$Time_point == "Mother"], sep='-')
+sum(in.mother1 %in% in.first.time.point1)
+length(in.mother1)
+
+in.first.time.point2 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Infancy" & caesarean$metadata$Time_point != "Mother"], caesarean$demix_data$cluster[caesarean$metadata$Time_point %in% c("Infancy") & caesarean$metadata$Time_point != "Mother"], sep='-')
+in.mother2 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point == "Mother"], caesarean$demix_data$cluster[caesarean$metadata$Time_point == "Mother"], sep='-')
+sum(in.mother2 %in% in.first.time.point2)
+length(in.mother2)
+
+
+
+## Reviewer 1 comment 14
+
+in.first.time.point1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point %in% c("4", "5", "6", "7", "8") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], vaginal$demix_data$cluster[vaginal$metadata$Time_point %in% c("4", "5", "6", "7", "8") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], sep='-')
+in.last.time.point1 <- paste(vaginal$metadata$Individual[vaginal$metadata$Time_point %in% c("21") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], vaginal$demix_data$cluster[vaginal$metadata$Time_point %in% c("21") & vaginal$metadata$Time_point != "Mother" & vaginal$metadata$Time_point != "Infancy"], sep='-')
+sum(in.last.time.point1 %in% in.first.time.point1)
+length(in.last.time.point1)
+
+in.first.time.point1 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point %in% c("4", "5", "6", "7", "8") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], caesarean$demix_data$cluster[caesarean$metadata$Time_point %in% c("4", "5", "6", "7", "8") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], sep='-')
+in.last.time.point1 <- paste(caesarean$metadata$Individual[caesarean$metadata$Time_point %in% c("21") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], caesarean$demix_data$cluster[caesarean$metadata$Time_point %in% c("21") & caesarean$metadata$Time_point != "Mother" & caesarean$metadata$Time_point != "Infancy"], sep='-')
+sum(in.last.time.point1 %in% in.first.time.point1)
+length(in.last.time.point1)
+
+## Reviewer 1 comment 16
+sum(table(paste(vaginal$metadata$Individual, vaginal$metadata$Time_point)) > 1)
+length(table(paste(vaginal$metadata$Individual, vaginal$metadata$Time_point)))
+
+sum(table(paste(caesarean$metadata$Individual, caesarean$metadata$Time_point)) > 1)
+length(table(paste(caesarean$metadata$Individual, caesarean$metadata$Time_point)))
