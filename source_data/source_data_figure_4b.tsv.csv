@@ -1,0 +1,15 @@
+from_node,amount,to_node,colour
+Mother,1,21d,#17becf
+Mother,3,Infancy,#17becf
+Environment,23,4d,#dddddd
+Environment,52,7d,#dddddd
+Environment,33,21d,#dddddd
+Environment,119,Infancy,#dddddd
+4d,11,7d,#1f77b4
+4d,2,21d,#1f77b4
+4d,1,Infancy,#1f77b4
+7d,8,21d,#1f77b4
+7d,19,21d,#ff7f0e
+21d,1,Infancy,#1f77b4
+7d,6,Infancy,#ff7f0e
+21d,4,Infancy,#2ca02c
